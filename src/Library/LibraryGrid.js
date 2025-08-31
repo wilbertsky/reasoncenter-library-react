@@ -1,73 +1,96 @@
-import * as React from 'react';
-import { styled } from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Grid from '@mui/material/Grid';
+import * as React from "react";
+import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
 import {
-  Button,
+  Autocomplete,
   Card,
   CardActionArea,
-  CardActions,
   CardContent,
-  Container, TextField,
-  Typography, useTheme
+  Container,
+  InputAdornment, Pagination, Stack,
+  TextField,
+  Typography,
+  useTheme
 } from "@mui/material";
 import getCollection from "../Api/LibraryApi";
 import { useEffect, useState } from "react";
-import checkUrlFor404 from "../Api/imageCheckApi";
 import OpenLibraryCardMedia from "../Helpers/OpenLibraryCardMedia";
-
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: '#fff',
-  ...theme.typography.body2,
-  padding: theme.spacing(2),
-  textAlign: 'center',
-  color: (theme.vars ?? theme).palette.text.secondary,
-  ...theme.applyStyles('dark', {
-    backgroundColor: '#1A2027',
-  }),
-}));
-
-// Get data from API.
-// Get the ISBN.
-// Show the image in the Grid container from Open Library.
-
-// Add "Welcome to Reason Center Library" with a small blurb of what books we have.
-
-
-
-
+import ClearIcon from "@mui/icons-material/Clear";
+import BookDetails from "./BookDetails";
 
 function LibraryGrid() {
-  const [libraryData, setLibraryData] = useState([])
-  const [filterText, setFilterText] = useState('');
+  const [libraryData, setLibraryData] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [authorFilterText, setAuthorFilterText] = useState("");
+  const [genreFilterText, setGenreFilterText] = useState("Science and Pseudoscience");
+  const [authors, setAuthors] = useState([]);
+  const [genres, setGenres] = useState([]);
+  const [currentModalId, setCurrentModalId] = useState(null);
+
 
   const theme = useTheme();
 
   useEffect(() => {
-    const library = getCollection(1, filterText);
+    const library = getCollection(1, searchText, '', genreFilterText, authorFilterText);
+    console.log(library);
     if (library) {
       library
-        .then(result => {
-          console.log(result);
-          console.log(result["member"])
+        .then((result) => {
           setLibraryData(result["member"]);
-          console.log(libraryData);
         })
-        .catch(err => {
-          console.log('error', err);
+        .catch((err) => {
+          console.log("error", err);
+        });
+    }
+  }, [searchText, genreFilterText, authorFilterText]);
+
+  useEffect(() => {
+    const authors = getCollection(1, searchText, 'author1');
+
+    if (authors) {
+      authors
+        .then((result) => {
+          const authorCollection = result["member"];
+          const test = authorCollection.map((author) => (author.author1));
+          console.log(test);
+          setAuthors(authorCollection.map((author) => (author.author1)));
+        })
+        .catch((err) => {
+          console.log("error", err);
         });
     }
 
-    // https://covers.openlibrary.org/b/isbn/0879758392-M.jpg
+    const genres = getCollection(1, searchText, 'genre');
 
-    console.log(library);
-    console.log(libraryData);
-  }, [filterText]);
+    if (genres) {
+      genres
+        .then((result) => {
+          const genreCollection = result["member"];
+          setGenres(genreCollection.map((genre) => (genre.genre)));
+        })
+        .catch((err) => {
+          console.log("error", err);
+        });
+    }
+  }, [searchText]);
 
-  const onFilterChange = (event) => {
-    setFilterText(event.target.value);
+  const onSearchChange = (event) => {
+    setSearchText(event.target.value);
   };
+
+  const handleSearchClear = () => {
+    setSearchText("");
+  };
+
+  // eslint-disable-next-line no-lone-blocks
+  {
+    /* todo:
+        1. (Working) Pagination.
+        2. Reason Center Logo and Top Menu App Bar, [Done: Search clear (x) button].
+        3. (Done) Filters
+        4. (Done) Create a details modal.  (looking good) (fixed) - Possible refactor because of a bug. When clearing/changing a filter it doesn't clear filter on outside click.
+     */
+  }
 
   return (
     <Container>
@@ -75,36 +98,88 @@ function LibraryGrid() {
         Welcome to Reason Center Library.
       </Typography>
 
-      <TextField fullWidth placeholder={"Search book titles in the library"} onChange={onFilterChange} sx={{ margin: theme.spacing(2, 0) }}/>
-      
+      { /* Search text for library grid display. */ }
+      <TextField
+        value={searchText}
+        fullWidth
+        placeholder={"Search book titles in the library"}
+        onChange={onSearchChange}
+        sx={{ margin: theme.spacing(2, 0) }}
+        slotProps={{
+          input: {
+            endAdornment: searchText !== '' && (
+              <InputAdornment position="end">
+                <ClearIcon
+                  sx={{ "&:hover": { cursor: "pointer" } }}
+                  aria-label="clear"
+                  onClick={handleSearchClear}
+                ></ClearIcon>
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
+
+      { /* Filters for organization of data:  */ }
+      <Box sx={{ display: 'flex', justifyContent: 'space-evenly', margin: theme.spacing(2, 0) }}>
+        <Autocomplete
+          value={authorFilterText}
+          onChange={(event, newValue) => {
+            setAuthorFilterText(newValue);
+          }}
+          openOnFocus
+          options={authors}
+          sx={{ width: 300 }}
+          renderInput={(params) => <TextField {...params} label="Filter By Author..." variant="standard" />}
+        />
+
+        <Autocomplete
+          value={genreFilterText}
+          onChange={(event, newValue) => {
+            setGenreFilterText(newValue);
+          }}
+          openOnFocus
+          options={genres}
+          sx={{ width: 300 }}
+          renderInput={(params) => <TextField {...params} label="Filter By Genre..." variant="standard" />}
+        />
+      </Box>
+
+      { /* Library Grid display. */ }
       <Box sx={{ flexGrow: 1 }}>
-        <Grid container justifyContent={"center"} spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
-          {libraryData && libraryData.map((book, index) => (
-            <Card sx={{ maxWidth: 200 }}>
-              <CardActionArea>
-                <OpenLibraryCardMedia bookIsbn={book.isbn10} />
-                <CardContent>
-                  <Typography gutterBottom variant="body1" component="div">
-                    {book.title}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {book.author1}
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-              <CardActions>
-                <Button size="small" color="primary">
-                  Book Details
-                </Button>
-              </CardActions>
-            </Card>
-          ))}
+        <Stack spacing={2}>
+          <Pagination count={4} shape="rounded" />
+        </Stack>
+        <Grid
+          container
+          justifyContent={"center"}
+          spacing={{ xs: 2, md: 3 }}
+          columns={{ xs: 4, sm: 8, md: 12 }}
+        >
+          {libraryData &&
+            libraryData.map((book, index) => (
+              <Card sx={{ maxWidth: 200 }} key={index}>
+                <CardActionArea onClick={() => (setCurrentModalId(index)) } >
+                  <BookDetails bookInformation={book} open={currentModalId === index} openHandler={setCurrentModalId}/>
+                  <OpenLibraryCardMedia bookIsbn={book.isbn10} />
+                  <CardContent>
+                    <Typography gutterBottom variant="body1" component="div">
+                      {book.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      {book.author1}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            ))}
         </Grid>
       </Box>
     </Container>
-
   );
-
 }
 
 export default LibraryGrid;

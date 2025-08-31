@@ -11,6 +11,6 @@ export default async function checkUrlFor404(url) {
       return placeHolder;
     }
   } catch (error) {
-    return "https://placehold.co/200x300/EEE/31343C?font=lato&text=image%20is%20unavailable"; // Treat network errors as non-existence for this purpose
+    return "https://placehold.co/200x300/EEE/31343C?font=lato&text=Image%20Unavailable"; // Treat network errors as non-existence for this purpose
   }
 }
