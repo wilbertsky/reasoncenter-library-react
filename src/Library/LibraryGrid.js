@@ -26,33 +26,40 @@ function LibraryGrid() {
   const [authors, setAuthors] = useState([]);
   const [genres, setGenres] = useState([]);
   const [currentModalId, setCurrentModalId] = useState(null);
+  const [totalLibraryItems, setTotalLibraryItems] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
 
   const theme = useTheme();
 
   useEffect(() => {
-    const library = getCollection(1, searchText, '', genreFilterText, authorFilterText);
-    console.log(library);
+    setTotalPages((Math.ceil(totalLibraryItems / 30)));
+  }, [totalLibraryItems]);
+
+  useEffect(() => {
+    const library = getCollection(currentPage, searchText, '', genreFilterText, authorFilterText);
+
     if (library) {
       library
         .then((result) => {
+          console.log("result", result);
           setLibraryData(result["member"]);
+          setTotalLibraryItems(result["totalItems"])
         })
         .catch((err) => {
           console.log("error", err);
         });
     }
-  }, [searchText, genreFilterText, authorFilterText]);
+  }, [currentPage, searchText, genreFilterText, authorFilterText]);
 
   useEffect(() => {
-    const authors = getCollection(1, searchText, 'author1');
+    const authors = getCollection(currentPage, searchText, 'author1');
 
     if (authors) {
       authors
         .then((result) => {
           const authorCollection = result["member"];
-          const test = authorCollection.map((author) => (author.author1));
-          console.log(test);
           setAuthors(authorCollection.map((author) => (author.author1)));
         })
         .catch((err) => {
@@ -75,22 +82,36 @@ function LibraryGrid() {
   }, [searchText]);
 
   const onSearchChange = (event) => {
+    setCurrentPage(1);
     setSearchText(event.target.value);
   };
 
   const handleSearchClear = () => {
+    setCurrentPage(1);
     setSearchText("");
   };
+
+  const onPaginationChange = (event, page) => {
+    setCurrentPage(page);
+  }
 
   // eslint-disable-next-line no-lone-blocks
   {
     /* todo:
-        1. (Working) Pagination.
-        2. Reason Center Logo and Top Menu App Bar, [Done: Search clear (x) button].
+        1. Reason Center Logo and Top Menu App Bar and bottom page bar.
+        2. (done) Pagination.
         3. (Done) Filters
         4. (Done) Create a details modal.  (looking good) (fixed) - Possible refactor because of a bug. When clearing/changing a filter it doesn't clear filter on outside click.
+
+        todo: Polishing:
+        1. Refactor to more components (pagination).
+        2. Have a skelton effect for the images. e.g. <Skeleton variant="rectangular" width={210} height={118} />
+
+
+
      */
   }
+
 
   return (
     <Container>
@@ -125,6 +146,8 @@ function LibraryGrid() {
         <Autocomplete
           value={authorFilterText}
           onChange={(event, newValue) => {
+            setCurrentPage(1);
+            setGenreFilterText("");
             setAuthorFilterText(newValue);
           }}
           openOnFocus
@@ -136,6 +159,8 @@ function LibraryGrid() {
         <Autocomplete
           value={genreFilterText}
           onChange={(event, newValue) => {
+            setCurrentPage(1);
+            setAuthorFilterText("");
             setGenreFilterText(newValue);
           }}
           openOnFocus
@@ -148,13 +173,14 @@ function LibraryGrid() {
       { /* Library Grid display. */ }
       <Box sx={{ flexGrow: 1 }}>
         <Stack spacing={2}>
-          <Pagination count={4} shape="rounded" />
+          <Pagination count={totalPages} shape="rounded" color="purple" page={currentPage} onChange={onPaginationChange} />
         </Stack>
         <Grid
           container
           justifyContent={"center"}
           spacing={{ xs: 2, md: 3 }}
           columns={{ xs: 4, sm: 8, md: 12 }}
+          padding={theme.spacing(2, 0)}
         >
           {libraryData &&
             libraryData.map((book, index) => (
@@ -177,6 +203,9 @@ function LibraryGrid() {
               </Card>
             ))}
         </Grid>
+        <Stack spacing={2} >
+          <Pagination count={totalPages} shape="rounded" color="secondary" page={currentPage} onChange={onPaginationChange} />
+        </Stack>
       </Box>
     </Container>
   );
