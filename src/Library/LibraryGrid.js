@@ -43,7 +43,6 @@ function LibraryGrid() {
     if (library) {
       library
         .then((result) => {
-          console.log("result", result);
           setLibraryData(result["member"]);
           setTotalLibraryItems(result["totalItems"])
         })
@@ -105,7 +104,8 @@ function LibraryGrid() {
 
         todo: Polishing:
         1. Refactor to more components (pagination).
-        2. Have a skelton effect for the images. e.g. <Skeleton variant="rectangular" width={210} height={118} />
+        2. (Done) Have a skelton effect for the images. e.g. <Skeleton variant="rectangular" width={210} height={118} />
+        3. Consider center the pagination since this has a centering look to the whole entire page.
 
 
 
@@ -173,7 +173,7 @@ function LibraryGrid() {
       { /* Library Grid display. */ }
       <Box sx={{ flexGrow: 1 }}>
         <Stack spacing={2}>
-          <Pagination count={totalPages} shape="rounded" color="purple" page={currentPage} onChange={onPaginationChange} />
+          <Pagination count={totalPages} shape="rounded" color="secondary" page={currentPage} onChange={onPaginationChange} />
         </Stack>
         <Grid
           container
@@ -184,7 +184,7 @@ function LibraryGrid() {
         >
           {libraryData &&
             libraryData.map((book, index) => (
-              <Card sx={{ maxWidth: 200 }} key={index}>
+              <Card sx={{ width: 200, maxWidth: 200 }} key={index}>
                 <CardActionArea onClick={() => (setCurrentModalId(index)) } >
                   <BookDetails bookInformation={book} open={currentModalId === index} openHandler={setCurrentModalId}/>
                   <OpenLibraryCardMedia bookIsbn={book.isbn10} />
