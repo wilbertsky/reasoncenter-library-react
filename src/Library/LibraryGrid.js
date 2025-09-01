@@ -7,7 +7,9 @@ import {
   CardActionArea,
   CardContent,
   Container,
-  InputAdornment, Pagination, Stack,
+  InputAdornment,
+  Pagination,
+  Stack,
   TextField,
   Typography,
   useTheme
@@ -34,7 +36,7 @@ function LibraryGrid() {
   const theme = useTheme();
 
   useEffect(() => {
-    setTotalPages((Math.ceil(totalLibraryItems / 30)));
+    setTotalPages((Math.ceil(totalLibraryItems / 10)));
   }, [totalLibraryItems]);
 
   useEffect(() => {
@@ -97,7 +99,7 @@ function LibraryGrid() {
   // eslint-disable-next-line no-lone-blocks
   {
     /* todo:
-        1. Reason Center Logo and Top Menu App Bar and bottom page bar.
+        1. (Working) Reason Center Logo and Top Menu App Bar and bottom page bar.
         2. (done) Pagination.
         3. (Done) Filters
         4. (Done) Create a details modal.  (looking good) (fixed) - Possible refactor because of a bug. When clearing/changing a filter it doesn't clear filter on outside click.
@@ -115,9 +117,6 @@ function LibraryGrid() {
 
   return (
     <Container>
-      <Typography variant="h5" gutterBottom>
-        Welcome to Reason Center Library.
-      </Typography>
 
       { /* Search text for library grid display. */ }
       <TextField
